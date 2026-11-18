@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Система знаний команды</title>
+  <style>
+    :root {
+      --ink: #1c1915;
+      --muted: #5c564c;
+      --line: #e4dccf;
+      --paper: #f6f1e8;
+      --card: #fffdf8;
+      --green: #1f3d32;
+      --green-2: #2f5b49;
+      --amber-bg: #f8e3b0;
+      --amber-ink: #7a4b08;
+      --danger: #8f2d2d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    header {
+      background: var(--green);
+      color: #f6f1e8;
+      padding: 28px 24px 0;
+    }
+    header h1 { margin: 4px 0 18px; font-size: 28px; font-weight: 650; }
+    .eyebrow { margin: 0; letter-spacing: 0.08em; text-transform: uppercase; font-size: 12px; opacity: 0.75; }
+    nav { display: flex; gap: 8px; }
+    nav button {
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      padding: 12px 16px;
+      border-radius: 12px 12px 0 0;
+      cursor: pointer;
+    }
+    nav button[aria-selected="true"] { background: var(--paper); color: var(--ink); }
+    main { max-width: 1080px; margin: 0 auto; padding: 24px; }
+    section[hidden] { display: none; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    h2 { margin: 0 0 14px; font-size: 22px; }
+    label { display: block; font-size: 14px; margin: 10px 0 6px; }
+    .row label { display: flex; align-items: center; gap: 8px; margin: 0; width: auto; }
+    .row label input { width: auto; }
+    input, textarea {
+      width: 100%;
+      font: inherit;
+      color: inherit;
+      border: 1px solid #d9d0c3;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #fff;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    button.primary, a.primary {
+      border: 0;
+      background: var(--green-2);
+      color: white;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    button.link, a.link {
+      border: 0;
+      background: transparent;
+      color: var(--green-2);
+      font: inherit;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: 13px; color: var(--muted); font-weight: 600; }
+    code { font-size: 12px; word-break: break-all; }
+    .badge {
+      display: inline-block;
+      background: var(--amber-bg);
+      color: var(--amber-ink);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .banner {
+      background: var(--amber-bg);
+      color: var(--amber-ink);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .muted, .hint { color: var(--muted); }
+    .hint { font-size: 14px; line-height: 1.45; margin: 0 0 8px; }
+    .error { color: var(--danger); min-height: 1.2em; }
+    .text-view {
+      white-space: pre-wrap;
+      line-height: 1.5;
+      max-height: 420px;
+      overflow: auto;
+      background: #fbf7f1;
+      border-radius: 12px;
+      padding: 14px;
+    }
+    mark { background: #f3cf73; }
+    .source {
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+      margin-top: 10px;
+    }
+    dialog {
+      width: min(720px, calc(100% - 32px));
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    dialog::backdrop { background: rgba(28, 25, 21, 0.35); }
+    @media (max-width: 720px) {
+      header, main { padding-left: 16px; padding-right: 16px; }
+      nav { overflow-x: auto; }
+      th, td { padding: 8px 6px; }
+      #doc-table thead, #history-table thead { display: none; }
+      #doc-table, #doc-table tbody, #doc-table tr, #doc-table td,
+      #history-table, #history-table tbody, #history-table tr, #history-table td { display: block; width: auto; }
+      #doc-table tr, #history-table tr { padding: 8px 0; border-bottom: 1px solid var(--line); }
+      #doc-table td, #history-table td { border: 0; padding: 2px 0; }
+      #doc-table td:nth-child(3) { color: var(--muted); font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">База знаний</p>
+    <h1>Система знаний команды</h1>
+    <nav>
+      <button type="button" data-tab="documents" aria-selected="true">Документы</button>
+      <button type="button" data-tab="questions" aria-selected="false">Вопросы</button>
+      <button type="button" data-tab="history" aria-selected="false">История</button>
+    </nav>
+  </header>
+  <main>
+    <section id="documents">
+      <div class="card">
+        <h2>Добавить документ</h2>
+        <form id="doc-form">
+          <label for="doc-title">Название</label>
+          <input id="doc-title" name="title" required maxlength="200">
+          <label for="doc-text">Текст</label>
+          <p class="hint" id="doc-text-hint">Абзацы разделяйте пустой строкой. По ней текст режется на фрагменты, и поиск идёт по ним. Без пустой строки весь текст останется одним фрагментом.</p>
+          <textarea id="doc-text" name="text" required aria-describedby="doc-text-hint"></textarea>
+          <p class="error" id="doc-error" role="alert"></p>
+          <button class="primary" type="submit">Добавить</button>
+        </form>
+      </div>
+      <div class="card">
+        <h2>Витрина</h2>
+        <p class="muted" id="doc-empty">Документов пока нет.</p>
+        <table id="doc-table" hidden>
+          <thead>
+            <tr><th>Название</th><th>Добавлен</th><th>document_id</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="card" id="doc-view" hidden>
+        <h2 id="doc-view-title"></h2>
+        <p class="muted" id="doc-view-meta"></p>
+        <div class="text-view" id="doc-view-text"></div>
+      </div>
+    </section>
+
+    <section id="questions" hidden>
+      <div class="card">
+        <h2>Спросить</h2>
+        <form id="ask-form">
+          <label for="ask-text">Вопрос</label>
+          <textarea id="ask-text" required></textarea>
+          <p class="error" id="ask-error" role="alert"></p>
+          <button class="primary" type="submit">Спросить</button>
+        </form>
+      </div>
+      <div class="card" id="ask-result" hidden>
+        <div class="banner" id="ask-banner" hidden>требует проверки</div>
+        <h2>Ответ</h2>
+        <p id="ask-answer"></p>
+        <h3>Источники</h3>
+        <div id="ask-sources"></div>
+      </div>
+    </section>
+
+    <section id="history" hidden>
+      <div class="card">
+        <h2>История вопросов</h2>
+        <div class="row">
+          <label>
+            <input id="review-filter" type="checkbox">
+            Только «требует проверки»
+          </label>
+          <a class="primary" id="export-link" href="/kb/export">Экспорт JSON</a>
+        </div>
+        <p class="muted" id="history-note"></p>
+        <p class="error" id="history-error" role="alert"></p>
+        <p class="muted" id="history-empty" hidden>Вопросов пока нет.</p>
+        <table id="history-table" hidden>
+          <thead>
+            <tr><th>Когда</th><th>Вопрос</th><th>Проверка</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="card">
+    <p class="muted" id="card-time"></p>
+    <h2 id="card-question"></h2>
+    <div class="banner" id="card-banner" hidden>требует проверки</div>
+    <p id="card-reason" hidden></p>
+    <h3>Ответ</h3>
+    <p id="card-answer"></p>
+    <h3>Источники</h3>
+    <div id="card-sources"></div>
+    <p><button class="primary" type="button" id="card-close">Закрыть</button></p>
+  </dialog>
+
+  <script>
+    const tabs = document.querySelectorAll("nav button");
+    const sections = {
+      documents: document.querySelector("#documents"),
+      questions: document.querySelector("#questions"),
+      history: document.querySelector("#history")
+    };
+
+    tabs.forEach((button) => {
+      button.addEventListener("click", () => setTab(button.dataset.tab));
+    });
+
+    function setTab(name) {
+      tabs.forEach((button) => {
+        button.setAttribute("aria-selected", String(button.dataset.tab === name));
+      });
+      Object.entries(sections).forEach(([key, section]) => {
+        section.hidden = key !== name;
+      });
+      if (name === "documents") loadDocuments();
+      if (name === "history") loadHistory();
+    }
+
+    async function api(path, options) {
+      const response = await fetch(path, options);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Ошибка запроса");
+      return data;
+    }
+
+    function questionWord(count) {
+      const mod10 = count % 10;
+      const mod100 = count % 100;
+      if (mod10 === 1 && mod100 !== 11) return "вопрос";
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "вопроса";
+      return "вопросов";
+    }
+
+    function when(value) {
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? value : date.toLocaleString("ru-RU", { hour12: false });
+    }
+
+    function badge() {
+      const mark = document.createElement("span");
+      mark.className = "badge";
+      mark.textContent = "требует проверки";
+      return mark;
+    }
+
+    function sourcesView(sources, target) {
+      target.replaceChildren();
+      if (!sources.length) {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = "Источников нет.";
+        target.append(empty);
+        return;
+      }
+      sources.forEach((source) => {
+        const block = document.createElement("div");
+        block.className = "source";
+        const quote = document.createElement("p");
+        quote.textContent = source.quote;
+        const link = document.createElement("button");
+        link.type = "button";
+        link.className = "link";
+        link.textContent = "Открыть документ";
+        link.addEventListener("click", () => {
+          document.querySelector("#card").close();
+          openDocument(source.document_id, source.quote);
+        });
+        block.append(quote, link);
+        target.append(block);
+      });
+    }
+
+    async function loadDocuments() {
+      const rows = await api("/kb/documents");
+      const empty = document.querySelector("#doc-empty");
+      const table = document.querySelector("#doc-table");
+      const body = table.querySelector("tbody");
+      body.replaceChildren();
+      empty.hidden = rows.length > 0;
+      table.hidden = rows.length === 0;
+      rows.forEach((row) => {
+        const tr = document.createElement("tr");
+        const title = document.createElement("td");
+        title.textContent = row.title;
+        const created = document.createElement("td");
+        created.textContent = when(row.created_at);
+        const id = document.createElement("td");
+        const code = document.createElement("code");
+        code.textContent = row.id;
+        id.append(code);
+        const action = document.createElement("td");
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "link";
+        button.textContent = "Открыть";
+        button.addEventListener("click", () => openDocument(row.id));
+        action.append(button);
+        tr.append(title, created, id, action);
+        body.append(tr);
+      });
+    }
+
+    async function openDocument(id, quote) {
+      setTab("documents");
+      const doc = await api("/kb/documents/" + encodeURIComponent(id));
+      document.querySelector("#doc-view").hidden = false;
+      document.querySelector("#doc-view-title").textContent = doc.title;
+      document.querySelector("#doc-view-meta").textContent = when(doc.created_at) + " · " + doc.id;
+      const view = document.querySelector("#doc-view-text");
+      view.replaceChildren();
+      const found = quote && doc.text.includes(quote);
+      if (!found) {
+        view.textContent = doc.text;
+      } else {
+        const start = doc.text.indexOf(quote);
+        view.append(document.createTextNode(doc.text.slice(0, start)));
+        const mark = document.createElement("mark");
+        mark.textContent = quote;
+        view.append(mark, document.createTextNode(doc.text.slice(start + quote.length)));
+        mark.scrollIntoView({ block: "center" });
+      }
+      document.querySelector("#doc-view").scrollIntoView({ block: "start" });
+    }
+
+    document.querySelector("#doc-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const error = document.querySelector("#doc-error");
+      error.textContent = "";
+      try {
+        await api("/kb/documents", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: document.querySelector("#doc-title").value,
+            text: document.querySelector("#doc-text").value
+          })
+        });
+        event.target.reset();
+        await loadDocuments();
+      } catch (err) {
+        error.textContent = err.message;
+      }
+    });
+
+    document.querySelector("#ask-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const error = document.querySelector("#ask-error");
+      error.textContent = "";
+      const button = event.target.querySelector("button");
+      button.disabled = true;
+      try {
+        const result = await api("/kb/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: document.querySelector("#ask-text").value })
+        });
+        document.querySelector("#ask-result").hidden = false;
+        document.querySelector("#ask-banner").hidden = !result.needs_review;
+        document.querySelector("#ask-answer").textContent = result.answer;
+        sourcesView(result.sources, document.querySelector("#ask-sources"));
+      } catch (err) {
+        error.textContent = err.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    document.querySelector("#review-filter").addEventListener("change", loadHistory);
+
+    async function loadHistory() {
+      const onlyReview = document.querySelector("#review-filter").checked;
+      const link = document.querySelector("#export-link");
+      link.href = onlyReview ? "/kb/export?needs_review=true" : "/kb/export";
+      const error = document.querySelector("#history-error");
+      error.textContent = "";
+      try {
+        const rows = await api("/kb/questions?limit=100" + (onlyReview ? "&needs_review=true" : ""));
+        document.querySelector("#history-note").textContent = rows.length
+          ? "Показано " + rows.length + " " + questionWord(rows.length) + ". Экспорт забирает все вопросы выбранного фильтра и все документы."
+          : "";
+        const empty = document.querySelector("#history-empty");
+        const table = document.querySelector("#history-table");
+        const body = table.querySelector("tbody");
+        body.replaceChildren();
+        empty.hidden = rows.length > 0;
+        table.hidden = rows.length === 0;
+        rows.forEach((row) => {
+          const tr = document.createElement("tr");
+          const created = document.createElement("td");
+          created.textContent = when(row.created_at);
+          const question = document.createElement("td");
+          question.textContent = row.question;
+          const review = document.createElement("td");
+          if (row.needs_review) review.append(badge());
+          else review.textContent = "нет";
+          const action = document.createElement("td");
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "link";
+          button.textContent = "Открыть";
+          button.addEventListener("click", () => openCard(row.id));
+          action.append(button);
+          tr.append(created, question, review, action);
+          body.append(tr);
+        });
+      } catch (err) {
+        error.textContent = err.message;
+      }
+    }
+
+    async function openCard(id) {
+      const card = await api("/kb/questions/" + encodeURIComponent(id));
+      document.querySelector("#card-time").textContent = when(card.created_at);
+      document.querySelector("#card-question").textContent = card.question;
+      document.querySelector("#card-banner").hidden = !card.needs_review;
+      const reason = document.querySelector("#card-reason");
+      reason.hidden = !card.error;
+      reason.textContent = card.error ? "Причина проверки: " + card.error : "";
+      document.querySelector("#card-answer").textContent = card.answer;
+      sourcesView(card.sources, document.querySelector("#card-sources"));
+      document.querySelector("#card").showModal();
+    }
+
+    document.querySelector("#card-close").addEventListener("click", () => {
+      document.querySelector("#card").close();
+    });
+
+    loadDocuments();
+  </script>
+</body>
+</html>
